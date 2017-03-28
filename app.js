@@ -17,9 +17,9 @@ var icingaConf = {
 
 //enable debug
 if(process.env.DEBUG == "TRUE" || process.env.DEBUG != undefined){
-    winston.level = 'debug';
+    logger.level = 'debug';
 } else{
-    winston.level = 'info';
+    logger.level = 'info';
 }
 
 //Icinga Host Config
