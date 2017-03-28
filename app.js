@@ -154,6 +154,7 @@ icingaServer.getHost(icingaHost, (err, result) => {
 
                                                 if(debug){
                                                     console.log("Get Adito clients information from snmp");
+                                                    console.log("Clients connected: " + aditoClients.length);
                                                 }
 
                                                 if (aditoClients.length <= 0) {
