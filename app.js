@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var logger = require('winston');
 
 var adsnmp = require('./libs/aditoSNMP');
 var icingaapi = require('./libs/icingaapi');
@@ -16,8 +17,9 @@ var icingaConf = {
 
 //enable debug
 if(process.env.DEBUG == "TRUE" || process.env.DEBUG != undefined){
-    var debug = true;
-    console.log("Debug is enabled");
+    winston.level = 'debug';
+} else{
+    winston.level = 'info';
 }
 
 //Icinga Host Config
@@ -51,7 +53,7 @@ var snmp = new adsnmp(aditoServerAddrr, aditoSNMPCommunity, aditoSNMPPort);
 var icingaServer = new icingaapi(icingaConf.server, icingaConf.port, icingaConf.user, icingaConf.pass); //create icingaapi object
 
 if(debug){
-    console.log("Get host information from icinga");
+    logger.debug("Get host information from icinga");
 }
 //chech, if Adito Server host already exist on icinga server
 icingaServer.getHost(icingaHost, (err, result) => {
@@ -59,7 +61,7 @@ icingaServer.getHost(icingaHost, (err, result) => {
         if (err.Statuscode == "404") {
 
             if(debug){
-                console.log("Host was not found in icinga, create one");
+                logger.debug("Host was not found in icinga, create one");
             }
 
             //get info
@@ -78,35 +80,35 @@ icingaServer.getHost(icingaHost, (err, result) => {
                         }
                     }), icingaHost, function (err, output) {
                         if (err) {
-                            console.log(err);
+                            logger.debug(err);
                         } else {
 
                             if(debug){
-                                console.log("Icinga host " + icingaHost + " was created");
+                                logger.debug("Icinga host " + icingaHost + " was created");
                             }
                             //if host exist, set state in icinga
                             icingaServer.setHostState(icingaHost, 0, "OK - Everything is going to be fine", function (err, output) {
                                 if (err) {
-                                    console.log(err);
+                                    logger.debug(err);
                                 }
                             })
                         }
                     })
                 }, (err) => {
-                    console.log(err);
+                    logger.error(err);
                 })
         } else {
-            console.log(err);
+            console.error(err);
         }
 
     } else {
         icingaServer.setHostState(icingaHost, 0, "OK - Everything is going to be fine", function (err, output) {
             if (err) {
-                console.log(err);
+                logger.error(err);
             } else {
 
                 if(debug){
-                    console.log("Host " + icingaHost + " exist, set state OK");
+                    logger.debug("Host " + icingaHost + " exist, set state OK");
                 }
 
                 //start checks 1. server stats, 2 clients stats
@@ -114,7 +116,7 @@ icingaServer.getHost(icingaHost, (err, result) => {
                     .then((aditoStats) => {
 
                         if(debug){
-                            console.log("Get information of adito host from snmp");
+                            logger.debug("Get information of adito host from snmp");
                         }
 
                         //update adito server host stats
@@ -130,7 +132,7 @@ icingaServer.getHost(icingaHost, (err, result) => {
                             }
                         }), icingaHost, function (err, output) {
                             if (err) {
-                                console.log(err);
+                                logger.error(err);
                             } else {
                                 //get adito cliensts info;
                                 //create service "Connected Clients"
@@ -140,11 +142,13 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                             //service not found, create
                                             icingaServer.createService(icingaConf.templateservice, icingaHost, "aditoClients", "Adito Connected Clients", icingaConf.group, icingaHost, function (err, result) {
                                                 if (err) {
-                                                    console.log(err);
+                                                    logger.error(err);
+                                                } else {
+                                                    logger.debug("Monitoring Service aditoClients was not founde, create one");
                                                 }
                                             })
                                         } else {
-                                            console.log(err);
+                                            logger.error(err);
                                         }
                                     } else {
                                         //service found
@@ -153,8 +157,8 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                             .then((aditoClients) => {
 
                                                 if(debug){
-                                                    console.log("Get Adito clients information from snmp");
-                                                    console.log("Clients connected: " + aditoClients.length);
+                                                    logger.debug("Get Adito clients information from snmp");
+                                                    logger.debug("Clients connected: " + aditoClients.length);
                                                 }
 
                                                 if (aditoClients.length <= 0) {
@@ -179,15 +183,15 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                                 }
                                                 icingaServer.setServicePerfdata("aditoClients", icingaHost, 0, clientsOut, perfdata, function (err, output) {
                                                     if (err) {
-                                                        console.log(err);
+                                                        logger.error(err);
                                                     } else {
                                                         if(debug){
-                                                            console.log("Send client information(snmp) to icinga was successfull");
+                                                            logger.debug("Send client information(snmp) to icinga was successfull");
                                                         }
                                                     }
                                                 })
                                             }, (err) => {
-                                                console.log(err);
+                                                logger.error(err);
                                             })
                                     }
                                 })
@@ -196,13 +200,18 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                     .then((aditoStats) => {
 
                                         if(debug){
-                                            console.log("Get snmp information of adito server");
+                                            logger.debug("Get snmp information of adito server");
                                         }
 
                                         var memoryFree = aditoStats.memoryFree;
                                         var memoryMax = aditoStats.memoryMax;
                                         var memoryUsed = memoryMax - memoryFree;
                                         var memUsedinPerc = Math.floor((memoryFree * 100) / memoryMax);
+
+                                        logger.debug("MemoryFree: " + memoryFree);
+                                        logger.debug("Memory Max: " + memoryMax);
+                                        logger.debug("Memory Used: "+ memoryUsed);
+                                        logger.debug("Memory used in percent: " + memUsedinPerc);
 
                                         if (memUsedinPerc < aditoMemWarn) {
                                             var state = 0; //ok
@@ -221,49 +230,49 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                         //create Service adito server memory usage;
 
                                         if(debug){
-                                            console.log("Get information of services from icinga");
+                                            logger.debug("Get information of services from icinga");
                                         }
                                         icingaServer.getService(icingaHost, "aditoServerMem", function (err, service) {
                                             if (err) {
                                                 if (err.Statuscode == "404") {
 
                                                     if(debug){
-                                                        console.log("Service was not found, create one");
+                                                        logger.debug("Service was not found, create one");
                                                     }
 
                                                     //not found, create
                                                     icingaServer.createService(icingaConf.templateservice, icingaHost, "aditoServerMem", "Adito Server Memory", icingaConf.group, icingaHost, function (err, result) {
                                                         if (err) {
-                                                            console.log(err);
+                                                            logger.error(err);
                                                         } else {
                                                             if(debug){
-                                                                console.log("Create service aditoServerMem");
+                                                                logger.debug("Create service aditoServerMem");
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    console.log(err);
+                                                    logger.error(err);
                                                 }
                                             } else {
                                                 //icingaServer.setServicePerfdata("aditoClients", icingaHost, 0, clientsOut, perfdata, function (err, output) {
                                                 icingaServer.setServicePerfdata("aditoServerMem", icingaHost, state, stateout, perfdataArr, function (err, output) {
                                                     if (err) {
-                                                        console.log(err);
+                                                        logger.error(err);
                                                     } else {
                                                         if(debug){
-                                                            console.log("Send perdata to icinga");
+                                                            logger.debug("Send perdata of aditoServerMem to icinga");
                                                         }
                                                     }
                                                 })
                                             }
                                         })
                                     }, (err) => {
-                                        console.log(err);
+                                        logger.error(err);
                                     })
                             }
                         })
                     }, (err) => {
-                        console.log(err);
+                        logger.error(err);
                     })
             }
         })

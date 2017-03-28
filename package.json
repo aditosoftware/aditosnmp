@@ -13,6 +13,7 @@
   "author": "aw",
   "license": "MIT",
   "dependencies": {
-    "snmp-native": "^1.1.0"
+    "snmp-native": "^1.1.0",
+    "winston": "^2.3.1"
   }
 }
