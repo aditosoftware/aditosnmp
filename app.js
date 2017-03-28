@@ -7,7 +7,7 @@ var icingaapi = require('./libs/icingaapi');
 
 var icingaConf = {
     'server': process.env.MONITORING_API_URL,
-    'port': process.env.MONITORING_API_PORT,
+    'port': process.env.MONITORING_API_PORT || "5665",
     'user': process.env.MONITORING_API_USER,
     'pass': process.env.MONITORING_API_PASS,
     'templateservice': process.env.TEMPLATESERVICE,
@@ -23,18 +23,18 @@ if (process.env.DEBUG == "TRUE" || process.env.DEBUG != undefined) {
 }
 
 //Icinga Host Config
-var icingaHost = process.env.ADITO_SERVER_NAME;
-var icingaHostDisp = process.env.ADITO_SERVER_DISPLAY_NAME;
+var icingaHost = process.env.ADITO_SERVER_NAME || "aditoServer";
+var icingaHostDisp = process.env.ADITO_SERVER_DISPLAY_NAME || "Adito Server";
 
 var aditoServerAddrr = process.env.ADITO_SNMP_SERVER_ADDR;
-var aditoSNMPCommunity = process.env.ADITO_SNMP_COMMUNITY; //snmp commmunity
-var aditoSNMPPort = process.env.ADITO_SNMP_PORT;
+var aditoSNMPCommunity = process.env.ADITO_SNMP_COMMUNITY || "public"; //snmp commmunity
+var aditoSNMPPort = process.env.ADITO_SNMP_PORT || "161";
 
 //adito memory warn value in %
-var aditoMemWarn = process.env.MEMORY_WARN_VALUE;
+var aditoMemWarn = process.env.MEMORY_WARN_VALUE || "95";
 
 //adito memory error value in %
-var aditomemErr = process.env.MEMORY_CRIT_VALUE;
+var aditomemErr = process.env.MEMORY_CRIT_VALUE || "99";
 
 //Output Debug info
 logger.debug("############# Icinga Config #############");
