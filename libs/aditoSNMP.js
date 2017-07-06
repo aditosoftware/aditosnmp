@@ -40,7 +40,9 @@ aditoSNMP.prototype.getOid = async function (oidStr) {
         var session = new snmp.Session({ host: self.host, community: self.community, port: self.port });
         session.get({ oid: oid }, function (error, varbinds) {
             if (error) {
-                console.log('Fail :(');
+                console.log('Cannot get oid: ' + oid + '. Exit');
+                session.close();
+                process.exit(1);
             } else {
                 //console.log(varbinds[0].oid + ' = ' + varbinds[0].value + ' (' + varbinds[0].type + ')');
                 session.close();
