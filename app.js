@@ -199,7 +199,7 @@ icingaServer.getHost(icingaHost, (err, result) => {
                                         var memoryFree = aditoStats.memoryFree;
                                         var memoryMax = aditoStats.memoryMax;
                                         var memoryUsed = memoryMax - memoryFree;
-                                        var memUsedinPerc = Math.floor((memoryFree * 100) / memoryMax);
+                                        var memUsedinPerc = Math.floor((memoryUsed * 100) / memoryMax);
 
                                         logger.debug("MemoryFree: " + memoryFree);
                                         logger.debug("Memory Max: " + memoryMax);
