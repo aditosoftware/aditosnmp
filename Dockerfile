@@ -1,12 +1,9 @@
-FROM node:7.7.4-alpine
+FROM node:8-alpine
 
-COPY libs/ /aditosnmp/libs/
-COPY app.js /aditosnmp/
-COPY package.json /aditosnmp/
-COPY run.sh /run.sh
+COPY aditosnmp/ aditosnmp/
 
 RUN cd /aditosnmp \
     && npm i \
-    && chmod +x /run.sh
+    && chmod +x /aditosnmp/run.sh
 
-CMD ["/run.sh"]
+CMD ["/aditosnmp/run.sh"]
